@@ -1,0 +1,325 @@
+package com.example.contactup
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.ZoomIn
+import androidx.compose.material.icons.outlined.StarOutline
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import com.example.contactup.data.Contacto
+
+@Composable
+fun PantallaPrincipal(
+    navController: NavController,
+    contactos: List<Contacto> = emptyList(),
+    onFavoritoClick: (Contacto) -> Unit = {},
+    tabActual: Pantalla = Pantalla.Todos
+)
+{
+    var modoOscuro by remember {
+        mutableStateOf(false)
+    }
+
+    var busqueda by remember {
+        mutableStateOf("")
+    }
+
+    val contactosFiltrados = contactos.filter {
+        it.nombre.contains(busqueda, ignoreCase = true)
+    }
+
+    val contactosAgrupados = contactosFiltrados
+        .sortedBy { it.nombre }
+        .groupBy { it.nombre.first().uppercase() }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(24.dp)
+        ) {
+            // Encabezado
+            Column {
+                Text(
+                    "Contactos",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    "${contactos.size} contactos",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            Spacer(Modifier.height(15.dp))
+
+            // Tarjeta "Tu perfil"
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(50.dp)
+                        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(50.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("TU", color = MaterialTheme.colorScheme.onSurface)
+                }
+
+                Column(modifier = Modifier.weight(1f).padding(start = 10.dp)) {
+                    Text(
+                        "Tu perfil",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        "Ver información del usuario logeado",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.alpha(0.5f)
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .size(30.dp)
+                        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(50.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ChevronRight,
+                        contentDescription = "",
+                        modifier = Modifier.size(25.dp),
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(15.dp))
+
+            Column {
+
+                OutlinedTextField(
+                    value = busqueda,
+                    onValueChange = { busqueda = it },
+                    placeholder = { Text("Buscar contactos...") },
+                    leadingIcon = {
+                        Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    },
+                    singleLine = true,
+                    shape = RoundedCornerShape(14.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.Transparent,
+                        unfocusedBorderColor = Color.Transparent,
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(Modifier.height(15.dp))
+
+                // Tabs navegables
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    tabsPrincipales.forEach { tab ->
+                        val seleccionada = tab == tabActual
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable {
+                                    if (!seleccionada) {
+                                        navController.navigate(tab.ruta) {
+                                            popUpTo(Pantalla.Todos.ruta) { inclusive = false }
+                                            launchSingleTop = true
+                                        }
+                                    }
+                                },
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                tab.titulo,
+                                color = if (seleccionada) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                fontWeight = if (seleccionada) FontWeight.Bold else FontWeight.Normal,
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            )
+                            if (seleccionada) {
+                                Box(
+                                    modifier = Modifier
+                                        .height(2.dp)
+                                        .width(40.dp)
+                                        .background(MaterialTheme.colorScheme.primary)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+                // Toggle modo claro/oscuro
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(14.dp))
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            if (modoOscuro) "Modo oscuro" else "Modo claro",
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            if (modoOscuro) "Cambiar a claro" else "Cambiar a oscuro",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
+                    Switch(
+                        checked = modoOscuro,
+                        onCheckedChange = { modoOscuro = it },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = MaterialTheme.colorScheme.primary,
+                            checkedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+                        )
+                    )
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+                LazyColumn(modifier = Modifier.weight(1f)) {
+                    contactosAgrupados.forEach { (letra, contactosDeLetra) ->
+                        item {
+                            Text(
+                                letra,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            )
+                        }
+                        items(contactosDeLetra) { contacto ->
+                            FilaContacto(
+                                contacto = contacto,
+                                onFavoritoClick = { onFavoritoClick(contacto) }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // Botones flotantes inferiores
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(24.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            IconButton(
+                onClick = { },
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(14.dp))
+            ) {
+                Icon(Icons.Default.ZoomIn, contentDescription = "Buscar", tint = MaterialTheme.colorScheme.primary)
+            }
+            IconButton(
+                onClick = { },
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(14.dp))
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Agregar contacto", tint = MaterialTheme.colorScheme.primary)
+            }
+        }
+    }
+}
+
+@Composable
+fun FilaContacto(
+    contacto: Contacto,
+    onFavoritoClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(42.dp)
+                .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(50.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                contacto.nombre.split(" ").take(2).joinToString("") { it.first().toString() },
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
+            Text(contacto.nombre, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+            Text(
+                contacto.telefono,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            )
+        }
+
+        IconButton(onClick = onFavoritoClick) {
+            Icon(
+                imageVector = if (contacto.favorito) Icons.Default.Star else Icons.Outlined.StarOutline,
+                contentDescription = "Favorito",
+                tint = if (contacto.favorito) Color(0xFFFFC107) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+            )
+        }
+    }
+}

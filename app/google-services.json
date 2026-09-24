@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "19868393034",
+    "project_id": "contactup-8eee4",
+    "storage_bucket": "contactup-8eee4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:19868393034:android:7c1e6109ce69f6763350b3",
+        "android_client_info": {
+          "package_name": "com.example.contactup"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5X-R0CJC5f9K3IR-rtPVIa2wO3bGGPn0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
