@@ -4,7 +4,7 @@ import androidx.compose.ui.graphics.Color
 
 // Colores Modo Claro
 val BackgroundLight = Color(0xFFDCD7EC)
-val SurfaceVariantLight = Color(0xFFC0B2D3)
+val SurfaceVariantLight = Color(0xFFD9CDEC)
 val PrimaryLight = Color(0xFF5B3FA8)
 val TextPLight = Color(0xFF2B0469)
 val BotBackgroundLight = Color(0xFFEAE3FF)

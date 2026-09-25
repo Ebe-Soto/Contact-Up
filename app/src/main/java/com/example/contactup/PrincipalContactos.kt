@@ -50,12 +50,14 @@ fun PantallaPrincipal(
     navController: NavController,
     contactos: List<Contacto> = emptyList(),
     onFavoritoClick: (Contacto) -> Unit = {},
-    tabActual: Pantalla = Pantalla.Todos
+    tabActual: Pantalla = Pantalla.Todos,
+    onClickAdd:() -> Unit = {},
+    onClickZoom:() -> Unit = {},
+    modoOscuro: Boolean,
+    onModoOscuroChange: (Boolean) -> Unit,
+    mostrarBotonAgregar: Boolean = true
 )
 {
-    var modoOscuro by remember {
-        mutableStateOf(false)
-    }
 
     var busqueda by remember {
         mutableStateOf("")
@@ -86,7 +88,7 @@ fun PantallaPrincipal(
                 )
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    "${contactos.size} contactos",
+                    "${contactos.size} Contactos",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -94,15 +96,20 @@ fun PantallaPrincipal(
 
             Spacer(Modifier.height(15.dp))
 
-            // Tarjeta "Tu perfil"
+            // Navegacion Perfil Usuario
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                    navController.navigate(Pantalla.Perfil.ruta)
+                },
+
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
                     modifier = Modifier
                         .size(50.dp)
-                        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(50.dp)),
+                        .background(MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(50.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     Text("TU", color = MaterialTheme.colorScheme.onSurface)
@@ -126,7 +133,7 @@ fun PantallaPrincipal(
                 Box(
                     modifier = Modifier
                         .size(30.dp)
-                        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(50.dp)),
+                        .background(MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(50.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -147,15 +154,19 @@ fun PantallaPrincipal(
                     onValueChange = { busqueda = it },
                     placeholder = { Text("Buscar contactos...") },
                     leadingIcon = {
-                        Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Icon(
+                            Icons.Default.Search,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
                     },
                     singleLine = true,
                     shape = RoundedCornerShape(14.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color.Transparent,
                         unfocusedBorderColor = Color.Transparent,
-                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant
+                        focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -204,7 +215,10 @@ fun PantallaPrincipal(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(14.dp))
+                        .background(
+                            MaterialTheme.colorScheme.secondaryContainer,
+                            RoundedCornerShape(14.dp)
+                        )
                         .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -222,7 +236,7 @@ fun PantallaPrincipal(
                     }
                     Switch(
                         checked = modoOscuro,
-                        onCheckedChange = { modoOscuro = it },
+                        onCheckedChange = { onModoOscuroChange(it) },
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = MaterialTheme.colorScheme.primary,
                             checkedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
@@ -246,7 +260,12 @@ fun PantallaPrincipal(
                         items(contactosDeLetra) { contacto ->
                             FilaContacto(
                                 contacto = contacto,
-                                onFavoritoClick = { onFavoritoClick(contacto) }
+                                onFavoritoClick = { onFavoritoClick(contacto) },
+                                onClickContacto = {
+                                    navController.navigate(
+                                        "detalle_contacto/${contacto.id}"
+                                    )
+                                }
                             )
                         }
                     }
@@ -262,20 +281,36 @@ fun PantallaPrincipal(
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             IconButton(
-                onClick = { },
+                onClick = onClickZoom,
                 modifier = Modifier
-                    .size(48.dp)
-                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(14.dp))
+                    .size(64.dp)
+                    .background(
+                        MaterialTheme.colorScheme.secondaryContainer,
+                        RoundedCornerShape(32.dp)
+                    )
             ) {
-                Icon(Icons.Default.ZoomIn, contentDescription = "Buscar", tint = MaterialTheme.colorScheme.primary)
+                Icon(
+                    Icons.Default.ZoomIn,
+                    contentDescription = "Buscar",
+                    tint = MaterialTheme.colorScheme.primary
+                )
             }
-            IconButton(
-                onClick = { },
-                modifier = Modifier
-                    .size(48.dp)
-                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(14.dp))
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Agregar contacto", tint = MaterialTheme.colorScheme.primary)
+            if (mostrarBotonAgregar) {
+                IconButton(
+                    onClick = onClickAdd,
+                    modifier = Modifier
+                        .size(64.dp)
+                        .background(
+                            MaterialTheme.colorScheme.secondaryContainer,
+                            RoundedCornerShape(32.dp)
+                        )
+                ) {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = "Agregar contacto",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
         }
     }
@@ -284,18 +319,24 @@ fun PantallaPrincipal(
 @Composable
 fun FilaContacto(
     contacto: Contacto,
-    onFavoritoClick: () -> Unit
+    onFavoritoClick: () -> Unit,
+    onClickContacto:() -> Unit
+
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(onClick = onClickContacto)
             .padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
                 .size(42.dp)
-                .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(50.dp)),
+                .background(
+                    MaterialTheme.colorScheme.secondaryContainer,
+                    RoundedCornerShape(50.dp)
+                ),
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -306,7 +347,11 @@ fun FilaContacto(
         }
 
         Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
-            Text(contacto.nombre, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+            Text(
+                contacto.nombre,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
             Text(
                 contacto.telefono,
                 style = MaterialTheme.typography.bodySmall,
