@@ -1,0 +1,259 @@
+package com.example.contactup
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.ZoomIn
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import com.example.contactup.data.Contacto
+
+@Composable
+fun PantallaFavoritos(
+    navController: NavController,
+    contactos: List<Contacto> = emptyList(),
+    onFavoritoClick: (Contacto) -> Unit = {},
+    onClickZoom: () -> Unit = {}
+) {
+
+    // Variable para el buscador
+    var busqueda by remember {
+        mutableStateOf("")
+    }
+
+    // Primero filtramos los contactos favoritos y despues hacemos la busqueda en base a ellos
+    val favoritosFiltrados = contactos
+        .filter { it.favorito }
+        .filter {
+            it.nombre.contains(busqueda, ignoreCase = true)
+        }
+
+    // Agrupamos por Orden Alfabetico
+    val favoritosAgrupados = favoritosFiltrados
+        .sortedBy { it.nombre }
+        .groupBy { it.nombre.first().uppercase() }
+
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(24.dp)
+        ) {
+
+            // Encabezado
+            Column {
+
+                // Titulo
+                Text(
+                    "Favoritos",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Spacer(Modifier.height(6.dp))
+
+                // Contador de Contactos favoritos
+                Text(
+                    "${favoritosFiltrados.size} Contactos Destacados",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            Spacer(Modifier.height(15.dp))
+
+
+            Column {
+
+                // Buscador de Contactos Favoritos
+                OutlinedTextField(
+                    value = busqueda,
+                    onValueChange = {
+                        busqueda = it
+                    },
+                    placeholder = {
+                        Text("Buscar en favoritos...")
+                    },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Default.Search,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    },
+                    singleLine = true,
+                    shape = RoundedCornerShape(14.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.Transparent,
+                        unfocusedBorderColor = Color.Transparent,
+                        focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(Modifier.height(15.dp))
+
+                // Tabs
+                Row(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+
+                    tabsPrincipales.forEach { tab ->
+
+                        val seleccionada = tab == Pantalla.Favoritos
+
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable {
+
+                                    if (!seleccionada) {
+
+                                        navController.navigate(tab.ruta) {
+                                            popUpTo(Pantalla.Todos.ruta) {
+                                                inclusive = false
+                                            }
+
+                                            launchSingleTop = true
+                                        }
+                                    }
+                                },
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+
+                            Text(
+                                tab.titulo,
+                                color = if (seleccionada)
+                                    MaterialTheme.colorScheme.primary
+                                else
+                                    MaterialTheme.colorScheme.onSurface.copy(
+                                        alpha = 0.6f
+                                    ),
+                                fontWeight = if (seleccionada)
+                                    FontWeight.Bold
+                                else
+                                    FontWeight.Normal,
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            )
+
+                            if (seleccionada) {
+
+                                Box(
+                                    modifier = Modifier
+                                        .height(2.dp)
+                                        .width(40.dp)
+                                        .background(
+                                            MaterialTheme.colorScheme.primary
+                                        )
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+
+                // Lista de Contactos Favoritos
+                LazyColumn(
+                    modifier = Modifier.weight(1f)
+                ) {
+
+                    favoritosAgrupados.forEach { (letra, favoritosDeLetra) ->
+
+                        // Icono personalizado del nombre
+                        item {
+                            Text(
+                                letra,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(
+                                    vertical = 8.dp
+                                )
+                            )
+                        }
+
+                        // Agrupar por orden alfabetico
+                        items(favoritosDeLetra) { contacto ->
+
+                            FilaContacto(
+                                contacto = contacto,
+                                onFavoritoClick = {
+                                    onFavoritoClick(contacto)
+                                },
+                                onClickContacto = {
+                                    navController.navigate(
+                                        "detalle_contacto/${contacto.id}"
+                                    )
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // Botón Zoom
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(24.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+
+            IconButton(
+                onClick = onClickZoom,
+                modifier = Modifier
+                    .size(64.dp)
+                    .background(
+                        MaterialTheme.colorScheme.secondaryContainer,
+                        RoundedCornerShape(32.dp)
+                    )
+            ) {
+
+                Icon(
+                    Icons.Default.ZoomIn,
+                    contentDescription = "Buscar",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+    }
+}

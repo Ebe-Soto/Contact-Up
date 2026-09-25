@@ -1,6 +1,7 @@
 package com.example.contactup
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,7 +26,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -45,7 +45,11 @@ fun PantallaRegistro(
         nombre: String,
         telefono: String,
         contrasena: String
-    ) -> Unit = { _, _, _ -> }
+    ) -> Unit = { _, _, _ -> },
+
+    onClickLogin:() -> Unit = { },
+
+    isLoading: Boolean = false
 
 ){
     var nombre by remember {
@@ -176,12 +180,6 @@ fun PantallaRegistro(
             shape = RoundedCornerShape(14.dp),
             modifier = Modifier.fillMaxWidth(),
         )
-        Text(
-            "Debe ser un numero de 10 dígitos",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(top = 4.dp)
-        )
 
         Spacer(Modifier.height(14.dp))
 
@@ -218,12 +216,6 @@ fun PantallaRegistro(
             shape = RoundedCornerShape(14.dp),
             modifier = Modifier.fillMaxWidth()
         )
-        Text(
-            "8+ caracteres, número y símbolo",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(top = 4.dp)
-        )
 
         Spacer(Modifier.height(5.dp))
 
@@ -239,7 +231,7 @@ fun PantallaRegistro(
             )
             Text(
                 "Acepto los términos y condiciones",
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurface
             )
         }
@@ -268,6 +260,7 @@ fun PantallaRegistro(
                     onCrearCuentaClick(nombre, telefono, contrasena)
                 }
             },
+            enabled = !isLoading,
             modifier = Modifier.fillMaxWidth().height(56.dp),
             shape = RoundedCornerShape(28.dp),
             colors = ButtonDefaults.buttonColors(
@@ -275,9 +268,15 @@ fun PantallaRegistro(
                 contentColor = MaterialTheme.colorScheme.surfaceVariant
             )
         ) {
-            Text("Crear cuenta",
-                fontSize = 16.sp
-            )
+            if (isLoading) {
+                androidx.compose.material3.CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Text("Crear cuenta", fontSize = 16.sp)
+            }
         }
         Text(
             "Al continuar aceptas la Política de privacidad.",
@@ -285,6 +284,21 @@ fun PantallaRegistro(
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.align(Alignment.CenterHorizontally).padding(vertical = 16.dp)
         )
+
+        Row () {
+            Text(
+                "¿Ya tienes Cuenta?",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(50.dp,0.dp, 4.dp)
+            )
+            Text(
+                "Inicia Sesión",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.clickable(onClick = onClickLogin)
+            )
+        }
 
     }
 }
