@@ -156,7 +156,7 @@ fun FormAgregarCon(
                     nombre = it
                     errorNombre = null
                 },
-                placeholder = { Text("Tu Nombre Completo") },
+                placeholder = { Text("Nombre Completo") },
                 isError = errorNombre != null,
                 supportingText = {
                     Text(
