@@ -249,7 +249,7 @@ fun FilaSeleccionContacto(
                 Icon(
                     imageVector = Icons.Default.Check,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.surfaceVariant,
+                    tint = MaterialTheme.colorScheme.background,
                     modifier = Modifier.size(16.dp)
                 )
             }

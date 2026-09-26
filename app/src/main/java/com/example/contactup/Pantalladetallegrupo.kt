@@ -105,7 +105,7 @@ fun PantallaDetalleGrupo(
                 enabled = grupo.miembros.isNotEmpty(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.surfaceVariant
+                    contentColor = MaterialTheme.colorScheme.background
                 )
             ) {
                 Icon(Icons.Default.Phone, contentDescription = null)

@@ -179,7 +179,7 @@ fun PantallaLogin(
             shape = RoundedCornerShape(28.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.surfaceVariant
+                contentColor = MaterialTheme.colorScheme.background
             )
         ) {
             Text("Iniciar Sesión",
@@ -201,7 +201,7 @@ fun PantallaLogin(
                 color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.clickable(onClick = onClickReg)
-                )
+            )
         }
 
     }

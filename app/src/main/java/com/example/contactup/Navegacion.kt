@@ -16,6 +16,9 @@ sealed class Pantalla(val ruta: String, val titulo: String) {
     object CrearGrupo : Pantalla("crear_grupo", "Crear Grupo")
     object DetalleGrupo : Pantalla("detalle_grupo/{grupoId}", "Detalle de Grupo")
     object LlamadaGrupal : Pantalla("llamada_grupal/{grupoId}", "Llamada Grupal")
+
+    object EditarContacto : Pantalla("editar_contacto/{contactoId}", "Editar Contacto")
+    object EditarPerfil : Pantalla("editar_perfil", "Editar Perfil")
 }
 
 val tabsPrincipales = listOf(Pantalla.Todos, Pantalla.Favoritos, Pantalla.Grupos)

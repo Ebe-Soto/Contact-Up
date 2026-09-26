@@ -39,9 +39,9 @@ import com.example.contactup.ui.theme.ContactUpTheme
 fun FormAgregarCon(
     onClickCancelar:() -> Unit = {},
     onClickGuardar:(
-            nombre: String,
-            telefono: String,
-            correo: String
+        nombre: String,
+        telefono: String,
+        correo: String
     ) -> Unit = { _, _, _, -> }
 
 ) {
@@ -134,7 +134,7 @@ fun FormAgregarCon(
                     shape = RoundedCornerShape(28.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.surfaceVariant
+                        contentColor = MaterialTheme.colorScheme.background
                     )
                 ) {
                     Text("Guardar",
@@ -156,7 +156,7 @@ fun FormAgregarCon(
                     nombre = it
                     errorNombre = null
                 },
-                placeholder = { Text("Nombre Completo") },
+                placeholder = { Text("Tu Nombre Completo") },
                 isError = errorNombre != null,
                 supportingText = {
                     Text(

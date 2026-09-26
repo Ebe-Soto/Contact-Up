@@ -31,6 +31,7 @@ import android.os.Build
 import android.util.Log
 import android.media.SoundPool
 import androidx.compose.runtime.mutableStateListOf
+import com.example.contactup.data.ActualizarPerfilUsuario
 import com.example.contactup.data.ObtenerDatosUsuario
 
 fun telefonoComoCorreo(telefono: String): String {
@@ -78,6 +79,10 @@ class MainActivity : ComponentActivity() {
             }
 
             var telefonoUsuario by remember {
+                mutableStateOf("")
+            }
+
+            var correoUsuario by remember {
                 mutableStateOf("")
             }
 
@@ -155,10 +160,11 @@ class MainActivity : ComponentActivity() {
                                                 Log.d("CONTACTUP", "Vibración antigua ejecutada")
                                             }
 
-                                            ObtenerDatosUsuario { nombre, telefono ->
+                                            ObtenerDatosUsuario { nombre, telefono, correo ->
 
                                                 nombreUsuario = nombre ?: ""
                                                 telefonoUsuario = telefono ?: ""
+                                                correoUsuario = correo ?: ""
 
                                                 scope.launch {
                                                     snackbarHostState.showSnackbar("¡Bienvenido!")
@@ -346,11 +352,12 @@ class MainActivity : ComponentActivity() {
                             if (contacto != null) {
                                 PantallaDetalleContacto(
                                     contacto = contacto,
+                                    grupos = grupos.filter { g -> g.miembros.any { it.id == contacto.id } }.map { it.nombre },
                                     onClickAtras = {
                                         navController.popBackStack()
                                     },
                                     onClickEditar = {
-                                        // Pendiente
+                                        navController.navigate("editar_contacto/${contacto.id}")
                                     },
                                     onClickLlamar = {
                                         // Pendiente
@@ -367,7 +374,7 @@ class MainActivity : ComponentActivity() {
                                         }
                                     },
                                     onClickAgregarGrupo = {
-                                        // Pendiente
+                                        navController.navigate("editar_contacto/${contacto.id}")
                                     },
                                     onClickEliminar = {
                                         soundPool.play(
@@ -408,15 +415,121 @@ class MainActivity : ComponentActivity() {
                             }
                         }
 
+                        composable(Pantalla.EditarContacto.ruta) { backStackEntry ->
+
+                            val contactoId =
+                                backStackEntry.arguments?.getString("contactoId")?.toIntOrNull()
+
+                            val contacto =
+                                contactos.firstOrNull { it.id == contactoId }
+
+                            if (contacto != null) {
+                                PantallaEditarContacto(
+                                    contacto = contacto,
+                                    todosLosGrupos = grupos,
+                                    onClickCancelar = { navController.popBackStack() },
+                                    onGuardar = { contactoEditado, gruposSeleccionados ->
+
+                                        // Actualiza los datos del contacto
+                                        val index = contactos.indexOfFirst { it.id == contacto.id }
+                                        if (index != -1) {
+                                            contactos[index] = contactoEditado
+                                        }
+
+                                        // Sincroniza la pertenencia a grupos (agrega/quita al contacto de cada grupo)
+                                        for (i in grupos.indices) {
+                                            val grupo = grupos[i]
+                                            val debeEstar = grupo.id in gruposSeleccionados
+                                            val estaActualmente = grupo.miembros.any { it.id == contacto.id }
+
+                                            grupos[i] = when {
+                                                debeEstar && !estaActualmente ->
+                                                    grupo.copy(miembros = grupo.miembros + contactoEditado)
+                                                !debeEstar && estaActualmente ->
+                                                    grupo.copy(miembros = grupo.miembros.filterNot { it.id == contacto.id })
+                                                debeEstar && estaActualmente ->
+                                                    grupo.copy(miembros = grupo.miembros.map { if (it.id == contacto.id) contactoEditado else it })
+                                                else -> grupo
+                                            }
+                                        }
+
+                                        soundPool.play(sonidoCrear, 1f, 1f, 1, 0, 1f)
+
+                                        val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                            vibrator.vibrate(
+                                                VibrationEffect.createOneShot(80, VibrationEffect.DEFAULT_AMPLITUDE)
+                                            )
+                                        } else {
+                                            @Suppress("DEPRECATION")
+                                            vibrator.vibrate(80)
+                                        }
+
+                                        scope.launch {
+                                            snackbarHostState.showSnackbar("Contacto actualizado")
+                                        }
+
+                                        navController.popBackStack()
+                                    }
+                                )
+                            }
+                        }
+
                         composable(Pantalla.Perfil.ruta) {
                             PantallaPerfil(
                                 nombre = nombreUsuario,
                                 telefono = telefonoUsuario,
+                                correo = correoUsuario,
                                 onClickAtras = {
                                     navController.popBackStack()
                                 },
                                 onClickEditar = {
-                                    // Pendiente
+                                    navController.navigate(Pantalla.EditarPerfil.ruta)
+                                }
+                            )
+                        }
+
+                        composable(Pantalla.EditarPerfil.ruta) {
+                            PantallaEditarPerfil(
+                                nombre = nombreUsuario,
+                                telefono = telefonoUsuario,
+                                correo = correoUsuario,
+                                onClickCancelar = { navController.popBackStack() },
+                                onGuardar = { nombre, telefono, correo ->
+
+                                    // Nota: "telefono" aquí es solo el número mostrado en el perfil.
+                                    // No cambia el correo "falso" con el que Firebase Auth identifica
+                                    // la cuenta (generado a partir del teléfono original de registro),
+                                    // así que editarlo aquí no afecta las credenciales de inicio de sesión.
+                                    nombreUsuario = nombre
+                                    telefonoUsuario = telefono
+                                    correoUsuario = correo
+
+                                    ActualizarPerfilUsuario(nombre, telefono, correo) { exito, _ ->
+                                        if (exito) {
+                                            soundPool.play(sonidoCrear, 1f, 1f, 1, 0, 1f)
+
+                                            val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+                                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                                vibrator.vibrate(
+                                                    VibrationEffect.createOneShot(80, VibrationEffect.DEFAULT_AMPLITUDE)
+                                                )
+                                            } else {
+                                                @Suppress("DEPRECATION")
+                                                vibrator.vibrate(80)
+                                            }
+
+                                            scope.launch {
+                                                snackbarHostState.showSnackbar("Perfil actualizado")
+                                            }
+                                        } else {
+                                            scope.launch {
+                                                snackbarHostState.showSnackbar("No se pudo actualizar el perfil")
+                                            }
+                                        }
+                                    }
+
+                                    navController.popBackStack()
                                 }
                             )
                         }
