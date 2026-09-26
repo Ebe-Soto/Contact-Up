@@ -42,11 +42,7 @@ import com.example.contactup.data.GrupoViewModel
 import androidx.compose.runtime.collectAsState
 import com.example.contactup.data.id
 import com.example.contactup.data.nombre
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
-import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
-import com.example.contactup.ui.responsive.ContenidoAdaptable
-import com.example.contactup.ui.responsive.ProveedorResponsivo
+
 
 fun telefonoComoCorreo(telefono: String): String {
     val soloDigitos = telefono.filter { it.isDigit() }
@@ -65,7 +61,6 @@ class MainActivity : ComponentActivity() {
     private var sonidoBorrar = 0
 
 
-    @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
 
         // Generamos soundPool permitiendo reproducir hasta 3 sonidos a la vez
@@ -84,8 +79,6 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
         setContent {
-            val windowSizeClass = calculateWindowSizeClass(this)
-
             val context = LocalContext.current
             val database = remember { AppDatabase.getDatabase(context) }
             val repository = remember { ContactoRepository(database.contactoDao()) }
@@ -119,7 +112,7 @@ class MainActivity : ComponentActivity() {
             }
 
             ContactUpTheme(darkTheme = modoOscuro) {
-                ProveedorResponsivo(windowSizeClass = windowSizeClass) {
+
                 val navController = rememberNavController()
 
                 // Variable para controlar el estado de carga
@@ -131,16 +124,15 @@ class MainActivity : ComponentActivity() {
                 // Permite ejecutar acciones mediante corrutinas
                 val scope = rememberCoroutineScope()
 
-                    Scaffold(
-                        snackbarHost = { SnackbarHost(snackbarHostState) }
-                    ) { padding ->
+                Scaffold(
+                    snackbarHost = { SnackbarHost(snackbarHostState) }
+                ) { padding ->
 
-                        ContenidoAdaptable(modifier = Modifier.padding(padding)) {
-                            NavHost(
-                                navController = navController,
-                                startDestination = Pantalla.Login.ruta,
-                                modifier = Modifier.fillMaxSize()
-                            ) {
+                    NavHost(
+                        navController = navController,
+                        startDestination = Pantalla.Login.ruta,
+                        modifier = Modifier.padding(padding)
+                    ) {
 
                         composable(Pantalla.Login.ruta) {
                             PantallaLogin(
@@ -690,8 +682,6 @@ class MainActivity : ComponentActivity() {
                                         navController.popBackStack()
                                     }
                                 )
-                            }
-                        }
                             }
                         }
                     }
