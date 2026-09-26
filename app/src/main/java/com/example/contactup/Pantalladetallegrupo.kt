@@ -37,12 +37,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.contactup.data.ColoresGrupo
 import com.example.contactup.data.Contacto
-import com.example.contactup.data.Grupo
 import com.example.contactup.ui.theme.ContactUpTheme
+import com.example.contactup.data.GrupoConContactos
+import com.example.contactup.data.nombre
+import com.example.contactup.data.color
+import com.example.contactup.data.Grupo
 
 @Composable
 fun PantallaDetalleGrupo(
-    grupo: Grupo,
+    grupo: GrupoConContactos,
     onBack: () -> Unit = {},
     onLlamadaGrupalClick: () -> Unit = {}
 ) {
@@ -191,10 +194,8 @@ fun FilaMiembroDetalle(contacto: Contacto) {
 
 // ---- Previews ----
 
-private val grupoPreview = Grupo(
-    id = 1,
-    nombre = "Trabajo",
-    color = ColoresGrupo[1],
+private val grupoPreview = GrupoConContactos(
+    grupo = Grupo(id = 1, nombre = "Trabajo", color = ColoresGrupo[1]),
     miembros = listOf(
         Contacto(nombre = "María García", telefono = "+34 612 111 111", correo = "maria@correo.com"),
         Contacto(nombre = "Adriana Acosta", telefono = "+34 612 345 678", correo = "adriana@correo.com"),

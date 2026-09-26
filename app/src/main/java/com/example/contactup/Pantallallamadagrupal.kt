@@ -45,15 +45,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.contactup.data.ColoresGrupo
 import com.example.contactup.data.Contacto
-import com.example.contactup.data.Grupo
+import com.example.contactup.data.GrupoConContactos
+import com.example.contactup.data.nombre
 import com.example.contactup.ui.theme.ContactUpTheme
+import com.example.contactup.data.Grupo
 
 @Composable
 fun PantallaLlamadaGrupal(
-    grupo: Grupo,
+    grupo: GrupoConContactos,
     onCerrar: () -> Unit = {},
     onIniciarLlamada: (List<Contacto>) -> Unit = {}
-) {
+){
     var seleccionados by remember { mutableStateOf(grupo.miembros.toSet()) }
 
     Column(
@@ -248,10 +250,8 @@ fun TarjetaMiembroSeleccionable(
 
 // ---- Previews ----
 
-private val grupoLlamadaPreview = Grupo(
-    id = 1,
-    nombre = "Trabajo",
-    color = ColoresGrupo[1],
+private val grupoLlamadaPreview = GrupoConContactos(
+    grupo = Grupo(id = 1, nombre = "Trabajo", color = ColoresGrupo[1]),
     miembros = listOf(
         Contacto(nombre = "María García", telefono = "", correo = ""),
         Contacto(nombre = "Adriana Acosta", telefono = "", correo = ""),

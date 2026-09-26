@@ -1,13 +1,16 @@
 package com.example.contactup.data
 
 import androidx.compose.ui.graphics.Color
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 
+@Entity(tableName = "grupos")
 data class Grupo(
+    @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val nombre: String,
     val descripcion: String = "",
-    val color: Color,
-    val miembros: List<Contacto> = emptyList()
+    val color: Color
 )
 
 // Paleta de colores seleccionables al crear un grupo (coincide con el diseño de Figma)
