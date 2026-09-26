@@ -171,7 +171,7 @@ fun PantallaLlamadaGrupal(
                 shape = RoundedCornerShape(25.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.surfaceVariant
+                    contentColor = MaterialTheme.colorScheme.background
                 ),
                 enabled = seleccionados.isNotEmpty()
             ) {
@@ -229,7 +229,7 @@ fun TarjetaMiembroSeleccionable(
                         Icon(
                             Icons.Default.Check,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.surfaceVariant,
+                            tint = MaterialTheme.colorScheme.background,
                             modifier = Modifier.size(10.dp)
                         )
                     }
