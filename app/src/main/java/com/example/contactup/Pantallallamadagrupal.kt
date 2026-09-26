@@ -181,6 +181,8 @@ fun PantallaLlamadaGrupal(
                         listaSeleccionados.size == 1 -> "Llamando a ${listaSeleccionados.first().nombre}"
                         else -> "Llamando a ${grupo.nombre} (${listaSeleccionados.size} participantes)"
                     }
+
+                    vibrarCorto(context)
                     Toast.makeText(context, mensaje, Toast.LENGTH_SHORT).show()
 
                     onIniciarLlamada(listaSeleccionados)
