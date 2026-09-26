@@ -50,6 +50,7 @@ fun PantallaPrincipal(
     navController: NavController,
     contactos: List<Contacto> = emptyList(),
     onFavoritoClick: (Contacto) -> Unit = {},
+    onEliminarContacto: (Contacto) -> Unit = {},
     tabActual: Pantalla = Pantalla.Todos,
     onClickAdd:() -> Unit = {},
     onClickZoom:() -> Unit = {},
@@ -62,6 +63,15 @@ fun PantallaPrincipal(
     var busqueda by remember {
         mutableStateOf("")
     }
+
+    // Modo zoom: se activa/desactiva con el botón de lupa
+    var modoZoom by remember { mutableStateOf(false) }
+
+    // Contacto pendiente de confirmación para eliminar (swipe izquierdo)
+    var contactoAEliminar by remember { mutableStateOf<Contacto?>(null) }
+
+    // Contacto pendiente de confirmación para quitar de favoritos
+    var contactoAQuitarFavorito by remember { mutableStateOf<Contacto?>(null) }
 
     val contactosFiltrados = contactos.filter {
         it.nombre.contains(busqueda, ignoreCase = true)
@@ -101,8 +111,8 @@ fun PantallaPrincipal(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable {
-                    navController.navigate(Pantalla.Perfil.ruta)
-                },
+                        navController.navigate(Pantalla.Perfil.ruta)
+                    },
 
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -246,27 +256,54 @@ fun PantallaPrincipal(
 
                 Spacer(Modifier.height(12.dp))
 
-                LazyColumn(modifier = Modifier.weight(1f)) {
-                    contactosAgrupados.forEach { (letra, contactosDeLetra) ->
-                        item {
-                            Text(
-                                letra,
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(vertical = 8.dp)
-                            )
-                        }
-                        items(contactosDeLetra) { contacto ->
-                            FilaContacto(
-                                contacto = contacto,
-                                onFavoritoClick = { onFavoritoClick(contacto) },
-                                onClickContacto = {
-                                    navController.navigate(
-                                        "detalle_contacto/${contacto.id}"
+                if (modoZoom) {
+                    Text(
+                        "Modo zoom activo: pellizca para acercar, toca la lupa para salir",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
+
+                // Lista de contactos: envuelta en el área con zoom por pellizco
+                AreaConZoom(
+                    activo = modoZoom,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                        contactosAgrupados.forEach { (letra, contactosDeLetra) ->
+                            item {
+                                Text(
+                                    letra,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(vertical = 8.dp)
+                                )
+                            }
+                            items(contactosDeLetra, key = { it.id }) { contacto ->
+                                FilaDeslizable(
+                                    item = contacto,
+                                    onSolicitarEliminar = { contactoAEliminar = it }
+                                ) {
+                                    FilaContacto(
+                                        contacto = contacto,
+                                        onFavoritoClick = {
+                                            if (contacto.favorito) {
+                                                contactoAQuitarFavorito = contacto
+                                            } else {
+                                                onFavoritoClick(contacto)
+                                            }
+                                        },
+                                        onClickContacto = {
+                                            navController.navigate(
+                                                "detalle_contacto/${contacto.id}"
+                                            )
+                                        }
                                     )
                                 }
-                            )
+                            }
                         }
                     }
                 }
@@ -281,18 +318,22 @@ fun PantallaPrincipal(
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             IconButton(
-                onClick = onClickZoom,
+                onClick = {
+                    modoZoom = !modoZoom
+                    onClickZoom()
+                },
                 modifier = Modifier
                     .size(64.dp)
                     .background(
-                        MaterialTheme.colorScheme.secondaryContainer,
+                        if (modoZoom) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.secondaryContainer,
                         RoundedCornerShape(32.dp)
                     )
             ) {
                 Icon(
                     Icons.Default.ZoomIn,
-                    contentDescription = "Buscar",
-                    tint = MaterialTheme.colorScheme.primary
+                    contentDescription = "Activar modo zoom",
+                    tint = if (modoZoom) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.primary
                 )
             }
             if (mostrarBotonAgregar) {
@@ -314,6 +355,36 @@ fun PantallaPrincipal(
             }
         }
     }
+
+    // Diálogo: confirmar eliminación de contacto (por swipe)
+    contactoAEliminar?.let { contacto ->
+        DialogoConfirmacion(
+            titulo = "Eliminar contacto",
+            mensaje = "¿Seguro que quieres eliminar a ${contacto.nombre}?",
+            textoConfirmar = "Eliminar",
+            esDestructivo = true,
+            onConfirmar = {
+                onEliminarContacto(contacto)
+                contactoAEliminar = null
+            },
+            onCancelar = { contactoAEliminar = null }
+        )
+    }
+
+    // Diálogo: confirmar quitar de favoritos
+    contactoAQuitarFavorito?.let { contacto ->
+        DialogoConfirmacion(
+            titulo = "Quitar de favoritos",
+            mensaje = "¿Seguro que quieres quitar de favoritos a: ${contacto.nombre}?",
+            textoConfirmar = "Quitar",
+            esDestructivo = false,
+            onConfirmar = {
+                onFavoritoClick(contacto)
+                contactoAQuitarFavorito = null
+            },
+            onCancelar = { contactoAQuitarFavorito = null }
+        )
+    }
 }
 
 @Composable
@@ -326,6 +397,7 @@ fun FilaContacto(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.background)
             .clickable(onClick = onClickContacto)
             .padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically

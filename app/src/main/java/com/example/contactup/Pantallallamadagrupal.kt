@@ -1,5 +1,6 @@
 package com.example.contactup
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -40,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -55,6 +57,7 @@ fun PantallaLlamadaGrupal(
     onIniciarLlamada: (List<Contacto>) -> Unit = {}
 ) {
     var seleccionados by remember { mutableStateOf(grupo.miembros.toSet()) }
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -166,7 +169,19 @@ fun PantallaLlamadaGrupal(
                 Text("Cancelar")
             }
             Button(
-                onClick = { onIniciarLlamada(seleccionados.toList()) },
+                onClick = {
+                    val listaSeleccionados = seleccionados.toList()
+
+                    // Notificación "Llamando a..." — con un solo participante mostramos su
+                    // nombre, con varios mostramos el nombre del grupo y cuántos entran.
+                    val mensaje = when {
+                        listaSeleccionados.size == 1 -> "Llamando a ${listaSeleccionados.first().nombre}"
+                        else -> "Llamando a ${grupo.nombre} (${listaSeleccionados.size} participantes)"
+                    }
+                    Toast.makeText(context, mensaje, Toast.LENGTH_SHORT).show()
+
+                    onIniciarLlamada(listaSeleccionados)
+                },
                 modifier = Modifier.weight(1f).height(50.dp),
                 shape = RoundedCornerShape(25.dp),
                 colors = ButtonDefaults.buttonColors(

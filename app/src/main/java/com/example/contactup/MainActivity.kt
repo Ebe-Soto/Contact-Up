@@ -544,12 +544,42 @@ class MainActivity : ComponentActivity() {
                                 onModoOscuroChange = { modoOscuro = it },
                                 onClickAdd = { navController.navigate(Pantalla.AgregarContacto.ruta) },
                                 onClickZoom = {
-                                    // Pendiente
+                                    // El modo zoom (pellizcar para acercar) ya se maneja
+                                    // internamente en PantallaPrincipal; este callback queda
+                                    // disponible por si luego quieres agregar analítica, sonido, etc.
                                 },
                                 onFavoritoClick = { contacto ->
                                     val index = contactos.indexOfFirst { it.id == contacto.id }
                                     if (index != -1) {
                                         contactos[index] = contactos[index].copy(favorito = !contactos[index].favorito)
+                                    }
+                                },
+                                onEliminarContacto = { contacto ->
+                                    soundPool.play(sonidoBorrar, 1f, 1f, 1, 0, 1f)
+
+                                    val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                        vibrator.vibrate(
+                                            VibrationEffect.createOneShot(80, VibrationEffect.DEFAULT_AMPLITUDE)
+                                        )
+                                    } else {
+                                        @Suppress("DEPRECATION")
+                                        vibrator.vibrate(80)
+                                    }
+
+                                    // También lo quitamos de cualquier grupo al que pertenezca
+                                    for (i in grupos.indices) {
+                                        if (grupos[i].miembros.any { it.id == contacto.id }) {
+                                            grupos[i] = grupos[i].copy(
+                                                miembros = grupos[i].miembros.filterNot { it.id == contacto.id }
+                                            )
+                                        }
+                                    }
+
+                                    contactos.removeAll { it.id == contacto.id }
+
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar("Contacto eliminado")
                                     }
                                 },
                                 mostrarBotonAgregar = true
@@ -568,6 +598,33 @@ class MainActivity : ComponentActivity() {
                                             contactos[index].copy(
                                                 favorito = !contactos[index].favorito
                                             )
+                                    }
+                                },
+                                onEliminarContacto = { contacto ->
+                                    soundPool.play(sonidoBorrar, 1f, 1f, 1, 0, 1f)
+
+                                    val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                        vibrator.vibrate(
+                                            VibrationEffect.createOneShot(80, VibrationEffect.DEFAULT_AMPLITUDE)
+                                        )
+                                    } else {
+                                        @Suppress("DEPRECATION")
+                                        vibrator.vibrate(80)
+                                    }
+
+                                    for (i in grupos.indices) {
+                                        if (grupos[i].miembros.any { it.id == contacto.id }) {
+                                            grupos[i] = grupos[i].copy(
+                                                miembros = grupos[i].miembros.filterNot { it.id == contacto.id }
+                                            )
+                                        }
+                                    }
+
+                                    contactos.removeAll { it.id == contacto.id }
+
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar("Contacto eliminado")
                                     }
                                 }
                             )
@@ -640,10 +697,9 @@ class MainActivity : ComponentActivity() {
                                     grupo = grupo,
                                     onCerrar = { navController.popBackStack() },
                                     onIniciarLlamada = { _ ->
+                                        // El Toast "Llamando a..." ya se muestra dentro de
+                                        // PantallaLlamadaGrupal al presionar "Iniciar llamada".
                                         // TODO: conectar con la lógica real de llamada grupal (WebRTC, etc.)
-                                        scope.launch {
-                                            snackbarHostState.showSnackbar("Función de llamada grupal en desarrollo")
-                                        }
                                         navController.popBackStack()
                                     }
                                 )
