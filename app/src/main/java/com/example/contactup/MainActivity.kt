@@ -447,6 +447,25 @@ class MainActivity : ComponentActivity() {
                                 contactos = contactos.filter { it.favorito },
                                 onFavoritoClick = { contacto ->
                                     contactoViewModel.marcarFavorito(contacto, !contacto.favorito)
+                                },
+                                onEliminarContacto = { contacto ->
+                                    soundPool.play(sonidoBorrar, 1f, 1f, 1, 0, 1f)
+
+                                    val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                        vibrator.vibrate(
+                                            VibrationEffect.createOneShot(80, VibrationEffect.DEFAULT_AMPLITUDE)
+                                        )
+                                    } else {
+                                        @Suppress("DEPRECATION")
+                                        vibrator.vibrate(80)
+                                    }
+
+                                    contactoViewModel.eliminarContacto(contacto)
+
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar("Contacto eliminado")
+                                    }
                                 }
                             )
                         }
