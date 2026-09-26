@@ -1,5 +1,9 @@
 package com.example.contactup
 
+import android.content.Context
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Box
@@ -169,5 +173,24 @@ fun AreaConZoom(
         ) {
             content()
         }
+    }
+}
+
+/**
+ * Genera una vibración corta (feedback háptico), compatible con versiones
+ * antiguas y nuevas de Android. Mismo patrón que se usa en MainActivity
+ * para login, registro, crear/eliminar contacto, etc.
+ * Se usa, por ejemplo, al iniciar una llamada (individual o grupal).
+ */
+fun vibrarCorto(context: Context, duracionMs: Long = 80) {
+    val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator ?: return
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        vibrator.vibrate(
+            VibrationEffect.createOneShot(duracionMs, VibrationEffect.DEFAULT_AMPLITUDE)
+        )
+    } else {
+        @Suppress("DEPRECATION")
+        vibrator.vibrate(duracionMs)
     }
 }

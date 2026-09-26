@@ -117,6 +117,7 @@ fun PantallaDetalleContacto(
                 modifier = Modifier
                     .background(MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(14.dp))
                     .clickable {
+                        vibrarCorto(context)
                         Toast.makeText(context, "Llamando a ${contacto.nombre}", Toast.LENGTH_SHORT).show()
                         onClickLlamar()
                     }
