@@ -29,6 +29,18 @@ class GrupoViewModel(private val repository: GrupoRepository) : ViewModel() {
         }
     }
 
+    fun agregarMiembro(grupoId: Int, contactoId: Int) {
+        viewModelScope.launch {
+            repository.agregarMiembro(grupoId, contactoId)
+        }
+    }
+
+    fun quitarMiembro(grupoId: Int, contactoId: Int) {
+        viewModelScope.launch {
+            repository.quitarMiembro(grupoId, contactoId)
+        }
+    }
+
     class Factory(private val repository: GrupoRepository) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(GrupoViewModel::class.java)) {

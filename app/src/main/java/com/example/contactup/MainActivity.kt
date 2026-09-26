@@ -41,6 +41,7 @@ import com.example.contactup.data.GrupoRepository
 import com.example.contactup.data.GrupoViewModel
 import androidx.compose.runtime.collectAsState
 import com.example.contactup.data.id
+import com.example.contactup.data.nombre
 
 
 fun telefonoComoCorreo(telefono: String): String {
@@ -361,7 +362,7 @@ class MainActivity : ComponentActivity() {
                             if (contacto != null) {
                                 PantallaDetalleContacto(
                                     contacto = contacto,
-                                    grupos = grupos.filter { g -> g.miembros.any { it.id == contacto.id } }.map { it.nombre },
+                                    grupos = gruposConContactos.filter { g -> g.miembros.any { it.id == contacto.id } }.map { it.nombre },
                                     onClickAtras = {
                                         navController.popBackStack()
                                     },
@@ -427,30 +428,22 @@ class MainActivity : ComponentActivity() {
                             if (contacto != null) {
                                 PantallaEditarContacto(
                                     contacto = contacto,
-                                    todosLosGrupos = grupos,
+                                    todosLosGrupos = gruposConContactos,
                                     onClickCancelar = { navController.popBackStack() },
                                     onGuardar = { contactoEditado, gruposSeleccionados ->
 
                                         // Actualiza los datos del contacto
-                                        val index = contactos.indexOfFirst { it.id == contacto.id }
-                                        if (index != -1) {
-                                            contactos[index] = contactoEditado
-                                        }
+                                        contactoViewModel.actualizarContacto(contactoEditado)
 
                                         // Sincroniza la pertenencia a grupos (agrega/quita al contacto de cada grupo)
-                                        for (i in grupos.indices) {
-                                            val grupo = grupos[i]
+                                        for (grupo in gruposConContactos) {
                                             val debeEstar = grupo.id in gruposSeleccionados
                                             val estaActualmente = grupo.miembros.any { it.id == contacto.id }
 
-                                            grupos[i] = when {
-                                                debeEstar && !estaActualmente ->
-                                                    grupo.copy(miembros = grupo.miembros + contactoEditado)
-                                                !debeEstar && estaActualmente ->
-                                                    grupo.copy(miembros = grupo.miembros.filterNot { it.id == contacto.id })
-                                                debeEstar && estaActualmente ->
-                                                    grupo.copy(miembros = grupo.miembros.map { if (it.id == contacto.id) contactoEditado else it })
-                                                else -> grupo
+                                            if (debeEstar && !estaActualmente) {
+                                                grupoViewModel.agregarMiembro(grupo.id, contacto.id)
+                                            } else if (!debeEstar && estaActualmente) {
+                                                grupoViewModel.quitarMiembro(grupo.id, contacto.id)
                                             }
                                         }
 
@@ -566,15 +559,13 @@ class MainActivity : ComponentActivity() {
                                     }
 
                                     // También lo quitamos de cualquier grupo al que pertenezca
-                                    for (i in grupos.indices) {
-                                        if (grupos[i].miembros.any { it.id == contacto.id }) {
-                                            grupos[i] = grupos[i].copy(
-                                                miembros = grupos[i].miembros.filterNot { it.id == contacto.id }
-                                            )
+                                    for (grupo in gruposConContactos) {
+                                        if (grupo.miembros.any { it.id == contacto.id }) {
+                                            grupoViewModel.quitarMiembro(grupo.id, contacto.id)
                                         }
                                     }
 
-                                    contactos.removeAll { it.id == contacto.id }
+                                    contactoViewModel.eliminarContacto(contacto)
 
                                     scope.launch {
                                         snackbarHostState.showSnackbar("Contacto eliminado")
@@ -604,34 +595,13 @@ class MainActivity : ComponentActivity() {
                                         vibrator.vibrate(80)
                                     }
 
-                                    contactoViewModel.eliminarContacto(contacto)
-
-                                    scope.launch {
-                                        snackbarHostState.showSnackbar("Contacto eliminado")
-                                    }
-                                },
-                                onEliminarContacto = { contacto ->
-                                    soundPool.play(sonidoBorrar, 1f, 1f, 1, 0, 1f)
-
-                                    val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                        vibrator.vibrate(
-                                            VibrationEffect.createOneShot(80, VibrationEffect.DEFAULT_AMPLITUDE)
-                                        )
-                                    } else {
-                                        @Suppress("DEPRECATION")
-                                        vibrator.vibrate(80)
-                                    }
-
-                                    for (i in grupos.indices) {
-                                        if (grupos[i].miembros.any { it.id == contacto.id }) {
-                                            grupos[i] = grupos[i].copy(
-                                                miembros = grupos[i].miembros.filterNot { it.id == contacto.id }
-                                            )
+                                    for (grupo in gruposConContactos) {
+                                        if (grupo.miembros.any { it.id == contacto.id }) {
+                                            grupoViewModel.quitarMiembro(grupo.id, contacto.id)
                                         }
                                     }
 
-                                    contactos.removeAll { it.id == contacto.id }
+                                    contactoViewModel.eliminarContacto(contacto)
 
                                     scope.launch {
                                         snackbarHostState.showSnackbar("Contacto eliminado")
