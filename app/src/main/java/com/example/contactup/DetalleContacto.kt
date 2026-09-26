@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.contactup.ui.responsive.LocalDimensiones
 import com.example.contactup.data.Contacto
 
 @Composable
@@ -54,7 +55,7 @@ fun PantallaDetalleContacto(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(24.dp)
+            .padding(LocalDimensiones.current.paddingContenido)
     ) {
 
         Row(

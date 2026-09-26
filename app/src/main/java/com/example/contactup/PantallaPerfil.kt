@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.contactup.ui.responsive.LocalDimensiones
 
 @Composable
 fun PantallaPerfil(
@@ -38,7 +39,7 @@ fun PantallaPerfil(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(24.dp)
+            .padding(LocalDimensiones.current.paddingContenido)
     ) {
         // Barra superior
         Row(

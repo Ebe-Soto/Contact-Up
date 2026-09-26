@@ -31,6 +31,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.contactup.ui.responsive.LocalDimensiones
 import androidx.compose.ui.unit.sp
 import com.example.contactup.ui.theme.ContactUpTheme
 import androidx.compose.material3.Icon
@@ -81,7 +82,7 @@ fun PantallaRegistro(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(24.dp)
+            .padding(LocalDimensiones.current.paddingContenido)
     ) {
         Row (
             modifier = Modifier

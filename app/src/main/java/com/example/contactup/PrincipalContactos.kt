@@ -42,6 +42,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.contactup.ui.responsive.LocalDimensiones
 import androidx.navigation.NavController
 import com.example.contactup.data.Contacto
 
@@ -86,7 +87,7 @@ fun PantallaPrincipal(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
-                .padding(24.dp)
+                .padding(LocalDimensiones.current.paddingContenido)
         ) {
             // Encabezado
             Column {

@@ -16,6 +16,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.contactup.ui.responsive.LocalDimensiones
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Drafts
@@ -72,7 +73,7 @@ fun FormAgregarCon(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
-                .padding(24.dp)
+                .padding(LocalDimensiones.current.paddingContenido)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
