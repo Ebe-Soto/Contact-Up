@@ -43,6 +43,7 @@ fun PantallaFavoritos(
     navController: NavController,
     contactos: List<Contacto> = emptyList(),
     onFavoritoClick: (Contacto) -> Unit = {},
+    onEliminarContacto: (Contacto) -> Unit = {},
     onClickZoom: () -> Unit = {}
 ) {
 
@@ -50,6 +51,15 @@ fun PantallaFavoritos(
     var busqueda by remember {
         mutableStateOf("")
     }
+
+    // Modo zoom: se activa/desactiva con el botón de lupa
+    var modoZoom by remember { mutableStateOf(false) }
+
+    // Contacto pendiente de confirmación para eliminar (swipe izquierdo)
+    var contactoAEliminar by remember { mutableStateOf<Contacto?>(null) }
+
+    // Contacto pendiente de confirmación para quitar de favoritos
+    var contactoAQuitarFavorito by remember { mutableStateOf<Contacto?>(null) }
 
     // Primero filtramos los contactos favoritos y despues hacemos la busqueda en base a ellos
     val favoritosFiltrados = contactos
@@ -189,41 +199,59 @@ fun PantallaFavoritos(
 
                 Spacer(Modifier.height(12.dp))
 
+                if (modoZoom) {
+                    Text(
+                        "Modo zoom activo: pellizca para acercar, toca la lupa para salir",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
 
-                // Lista de Contactos Favoritos
-                LazyColumn(
+                // Lista de Contactos Favoritos, envuelta en el área con zoom por pellizco
+                AreaConZoom(
+                    activo = modoZoom,
                     modifier = Modifier.weight(1f)
                 ) {
+                    LazyColumn(modifier = Modifier.fillMaxSize()) {
 
-                    favoritosAgrupados.forEach { (letra, favoritosDeLetra) ->
+                        favoritosAgrupados.forEach { (letra, favoritosDeLetra) ->
 
-                        // Icono personalizado del nombre
-                        item {
-                            Text(
-                                letra,
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(
-                                    vertical = 8.dp
+                            // Icono personalizado del nombre
+                            item {
+                                Text(
+                                    letra,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(
+                                        vertical = 8.dp
+                                    )
                                 )
-                            )
-                        }
+                            }
 
-                        // Agrupar por orden alfabetico
-                        items(favoritosDeLetra) { contacto ->
-
-                            FilaContacto(
-                                contacto = contacto,
-                                onFavoritoClick = {
-                                    onFavoritoClick(contacto)
-                                },
-                                onClickContacto = {
-                                    navController.navigate(
-                                        "detalle_contacto/${contacto.id}"
+                            // Agrupar por orden alfabetico
+                            items(favoritosDeLetra, key = { it.id }) { contacto ->
+                                FilaDeslizable(
+                                    item = contacto,
+                                    onSolicitarEliminar = { contactoAEliminar = it }
+                                ) {
+                                    FilaContacto(
+                                        contacto = contacto,
+                                        onFavoritoClick = {
+                                            // Aquí todos son favoritos, así que el click
+                                            // siempre significa "quitar de favoritos"
+                                            contactoAQuitarFavorito = contacto
+                                        },
+                                        onClickContacto = {
+                                            navController.navigate(
+                                                "detalle_contacto/${contacto.id}"
+                                            )
+                                        }
                                     )
                                 }
-                            )
+                            }
                         }
                     }
                 }
@@ -239,21 +267,55 @@ fun PantallaFavoritos(
         ) {
 
             IconButton(
-                onClick = onClickZoom,
+                onClick = {
+                    modoZoom = !modoZoom
+                    onClickZoom()
+                },
                 modifier = Modifier
                     .size(64.dp)
                     .background(
-                        MaterialTheme.colorScheme.secondaryContainer,
+                        if (modoZoom) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.secondaryContainer,
                         RoundedCornerShape(32.dp)
                     )
             ) {
 
                 Icon(
                     Icons.Default.ZoomIn,
-                    contentDescription = "Buscar",
-                    tint = MaterialTheme.colorScheme.primary
+                    contentDescription = "Activar modo zoom",
+                    tint = if (modoZoom) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.primary
                 )
             }
         }
+    }
+
+    // Diálogo: confirmar eliminación de contacto (por swipe)
+    contactoAEliminar?.let { contacto ->
+        DialogoConfirmacion(
+            titulo = "Eliminar contacto",
+            mensaje = "¿Seguro que quieres eliminar a ${contacto.nombre}?",
+            textoConfirmar = "Eliminar",
+            esDestructivo = true,
+            onConfirmar = {
+                onEliminarContacto(contacto)
+                contactoAEliminar = null
+            },
+            onCancelar = { contactoAEliminar = null }
+        )
+    }
+
+    // Diálogo: confirmar quitar de favoritos
+    contactoAQuitarFavorito?.let { contacto ->
+        DialogoConfirmacion(
+            titulo = "Quitar de favoritos",
+            mensaje = "¿Seguro que quieres quitar de favoritos a: ${contacto.nombre}?",
+            textoConfirmar = "Quitar",
+            esDestructivo = false,
+            onConfirmar = {
+                onFavoritoClick(contacto)
+                contactoAQuitarFavorito = null
+            },
+            onCancelar = { contactoAQuitarFavorito = null }
+        )
     }
 }
