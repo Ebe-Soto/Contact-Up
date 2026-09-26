@@ -185,7 +185,7 @@ fun PantallaGrupos(
         FloatingActionButton(
             onClick = { navController.navigate(Pantalla.CrearGrupo.ruta) },
             containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = MaterialTheme.colorScheme.background,
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier
                 .align(Alignment.BottomEnd)

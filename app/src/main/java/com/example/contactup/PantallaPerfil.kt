@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 fun PantallaPerfil(
     nombre: String,
     telefono: String,
+    correo: String = "",
     onClickAtras: () -> Unit = {},
     onClickEditar: () -> Unit = {}
 ) {
@@ -115,6 +116,10 @@ fun PantallaPerfil(
         CampoInfoPerfil(etiqueta = "NOMBRE", valor = nombre)
         Spacer(Modifier.height(14.dp))
         CampoInfoPerfil(etiqueta = "NÚMERO DE TELÉFONO", valor = telefono)
+        if (correo.isNotBlank()) {
+            Spacer(Modifier.height(14.dp))
+            CampoInfoPerfil(etiqueta = "CORREO ELECTRÓNICO", valor = correo)
+        }
 
         Spacer(Modifier.height(16.dp))
         Divider()

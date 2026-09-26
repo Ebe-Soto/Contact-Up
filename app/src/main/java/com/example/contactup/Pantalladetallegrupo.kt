@@ -1,5 +1,6 @@
 package com.example.contactup
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +33,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -108,7 +110,7 @@ fun PantallaDetalleGrupo(
                 enabled = grupo.miembros.isNotEmpty(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.surfaceVariant
+                    contentColor = MaterialTheme.colorScheme.background
                 )
             ) {
                 Icon(Icons.Default.Phone, contentDescription = null)
@@ -158,6 +160,8 @@ fun PantallaDetalleGrupo(
 
 @Composable
 fun FilaMiembroDetalle(contacto: Contacto) {
+    val context = LocalContext.current
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -186,7 +190,9 @@ fun FilaMiembroDetalle(contacto: Contacto) {
             )
         }
 
-        IconButton(onClick = { }) {
+        IconButton(onClick = {
+            Toast.makeText(context, "Llamando a ${contacto.nombre}", Toast.LENGTH_SHORT).show()
+        }) {
             Icon(Icons.Default.Phone, contentDescription = "Llamar", tint = MaterialTheme.colorScheme.primary)
         }
     }

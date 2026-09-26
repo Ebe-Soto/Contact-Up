@@ -62,12 +62,12 @@ fun IniciarSesion(
 }
 
 fun ObtenerDatosUsuario(
-    onResultado: (String?, String?) -> Unit
+    onResultado: (nombre: String?, telefono: String?, correo: String?) -> Unit
 ) {
     val usuario = Firebase.auth.currentUser
 
     if (usuario == null) {
-        onResultado(null, null)
+        onResultado(null, null, null)
         return
     }
 
@@ -82,9 +82,45 @@ fun ObtenerDatosUsuario(
             val telefono = snapshot.child("telefono")
                 .getValue(String::class.java)
 
-            onResultado(nombre, telefono)
+            val correo = snapshot.child("correo")
+                .getValue(String::class.java)
+
+            onResultado(nombre, telefono, correo)
         }
         .addOnFailureListener {
-            onResultado(null, null)
+            onResultado(null, null, null)
+        }
+}
+
+// Actualiza nombre, teléfono (mostrado) y correo del perfil del usuario ya autenticado.
+// Nota: esto NO cambia el correo "falso" (derivado del teléfono original) con el que
+// Firebase Auth identifica la cuenta, solo los datos guardados en Realtime Database.
+fun ActualizarPerfilUsuario(
+    nombre: String,
+    telefono: String,
+    correo: String,
+    onResultado: (Boolean, String?) -> Unit
+) {
+    val usuario = Firebase.auth.currentUser
+
+    if (usuario == null) {
+        onResultado(false, "No hay una sesión activa")
+        return
+    }
+
+    val datosActualizados = mapOf(
+        "nombre" to nombre,
+        "telefono" to telefono,
+        "correo" to correo
+    )
+
+    Firebase.database
+        .getReference("users/${usuario.uid}")
+        .updateChildren(datosActualizados)
+        .addOnSuccessListener {
+            onResultado(true, null)
+        }
+        .addOnFailureListener { e ->
+            onResultado(false, e.message)
         }
 }
