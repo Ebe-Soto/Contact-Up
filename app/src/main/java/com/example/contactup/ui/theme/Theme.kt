@@ -25,7 +25,7 @@ private val DarkColorScheme = darkColorScheme(
     onBackground = TextPDark,
     surface = BackgroundDark,
     onSurface = TextPDark,
-    surfaceVariant = BotBackgroundDark
+    surfaceVariant = SurfaceVariantDark
 )
 
 @Composable
