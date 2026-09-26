@@ -44,7 +44,7 @@ import com.example.contactup.ui.theme.ContactUpTheme
 fun PantallaCrearGrupo(
     contactosDisponibles: List<Contacto> = emptyList(),
     onCancelar: () -> Unit = {},
-    onCrear: (Grupo) -> Unit = {}
+    onCrear: (Grupo, List<Contacto>) -> Unit = { _, _ -> }
 ) {
     var nombre by remember { mutableStateOf("") }
     var descripcion by remember { mutableStateOf("") }
@@ -80,9 +80,9 @@ fun PantallaCrearGrupo(
                             Grupo(
                                 nombre = nombre.trim(),
                                 descripcion = descripcion.trim(),
-                                color = colorSeleccionado,
-                                miembros = miembrosSeleccionados.toList()
-                            )
+                                color = colorSeleccionado
+                            ),
+                            miembrosSeleccionados.toList()
                         )
                     }
                 }

@@ -33,6 +33,16 @@ import android.media.SoundPool
 import androidx.compose.runtime.mutableStateListOf
 import com.example.contactup.data.ActualizarPerfilUsuario
 import com.example.contactup.data.ObtenerDatosUsuario
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.contactup.data.AppDatabase
+import com.example.contactup.data.ContactoRepository
+import com.example.contactup.data.ContactoViewModel
+import com.example.contactup.data.GrupoRepository
+import com.example.contactup.data.GrupoViewModel
+import androidx.compose.runtime.collectAsState
+import com.example.contactup.data.id
+import com.example.contactup.data.nombre
+
 
 fun telefonoComoCorreo(telefono: String): String {
     val soloDigitos = telefono.filter { it.isDigit() }
@@ -69,6 +79,21 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
         setContent {
+            val context = LocalContext.current
+            val database = remember { AppDatabase.getDatabase(context) }
+            val repository = remember { ContactoRepository(database.contactoDao()) }
+            val grupoRepository = remember { GrupoRepository(database.grupoDao()) }
+            val grupoViewModel: GrupoViewModel = viewModel(
+                factory = GrupoViewModel.Factory(grupoRepository)
+            )
+
+            val gruposConContactos by grupoViewModel.gruposConContactos.collectAsState()
+
+            val contactoViewModel: ContactoViewModel = viewModel(
+                factory = ContactoViewModel.Factory(repository)
+            )
+
+            val contactos by contactoViewModel.todosLosContactos.collectAsState()
 
             var modoOscuro by remember {
                 mutableStateOf(false)
@@ -88,11 +113,6 @@ class MainActivity : ComponentActivity() {
 
             ContactUpTheme(darkTheme = modoOscuro) {
 
-                val contactos = remember { mutableStateListOf<Contacto>() }
-
-                // Estado de grupos, compartido entre las pantallas de Grupos
-                val grupos = remember { mutableStateListOf<Grupo>() }
-
                 val navController = rememberNavController()
 
                 // Variable para controlar el estado de carga
@@ -103,9 +123,6 @@ class MainActivity : ComponentActivity() {
 
                 // Permite ejecutar acciones mediante corrutinas
                 val scope = rememberCoroutineScope()
-
-                // Obtiene el contexto actual de la aplicación
-                val context = LocalContext.current
 
                 Scaffold(
                     snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -296,14 +313,7 @@ class MainActivity : ComponentActivity() {
                                 onClickCancelar = { navController.popBackStack() },
                                 onClickGuardar = { nombre, telefono, correo ->
 
-                                    contactos.add(
-                                        Contacto(
-                                            id = contactos.size + 1,
-                                            nombre = nombre,
-                                            telefono = telefono,
-                                            correo = correo
-                                        )
-                                    )
+                                    contactoViewModel.agregarContacto(nombre, telefono, correo)
 
                                     // Feedback de sonido exitoso
                                     soundPool.play(
@@ -352,7 +362,7 @@ class MainActivity : ComponentActivity() {
                             if (contacto != null) {
                                 PantallaDetalleContacto(
                                     contacto = contacto,
-                                    grupos = grupos.filter { g -> g.miembros.any { it.id == contacto.id } }.map { it.nombre },
+                                    grupos = gruposConContactos.filter { g -> g.miembros.any { it.id == contacto.id } }.map { it.nombre },
                                     onClickAtras = {
                                         navController.popBackStack()
                                     },
@@ -363,15 +373,7 @@ class MainActivity : ComponentActivity() {
                                         // Pendiente
                                     },
                                     onClickFavorito = {
-                                        val index =
-                                            contactos.indexOfFirst { it.id == contacto.id }
-
-                                        if (index != -1) {
-                                            contactos[index] =
-                                                contactos[index].copy(
-                                                    favorito = !contactos[index].favorito
-                                                )
-                                        }
+                                        contactoViewModel.marcarFavorito(contacto, !contacto.favorito)
                                     },
                                     onClickAgregarGrupo = {
                                         navController.navigate("editar_contacto/${contacto.id}")
@@ -401,8 +403,8 @@ class MainActivity : ComponentActivity() {
                                             vibrator.vibrate(80)
                                         }
 
-                                        // Metodo de Eliminacion
-                                        contactos.removeAll { it.id == contacto.id }
+                                        // Metodo de Eliminacion (ahora vía Room)
+                                        contactoViewModel.eliminarContacto(contacto)
 
                                         // Feedback visual de exito
                                         scope.launch {
@@ -426,30 +428,22 @@ class MainActivity : ComponentActivity() {
                             if (contacto != null) {
                                 PantallaEditarContacto(
                                     contacto = contacto,
-                                    todosLosGrupos = grupos,
+                                    todosLosGrupos = gruposConContactos,
                                     onClickCancelar = { navController.popBackStack() },
                                     onGuardar = { contactoEditado, gruposSeleccionados ->
 
                                         // Actualiza los datos del contacto
-                                        val index = contactos.indexOfFirst { it.id == contacto.id }
-                                        if (index != -1) {
-                                            contactos[index] = contactoEditado
-                                        }
+                                        contactoViewModel.actualizarContacto(contactoEditado)
 
                                         // Sincroniza la pertenencia a grupos (agrega/quita al contacto de cada grupo)
-                                        for (i in grupos.indices) {
-                                            val grupo = grupos[i]
+                                        for (grupo in gruposConContactos) {
                                             val debeEstar = grupo.id in gruposSeleccionados
                                             val estaActualmente = grupo.miembros.any { it.id == contacto.id }
 
-                                            grupos[i] = when {
-                                                debeEstar && !estaActualmente ->
-                                                    grupo.copy(miembros = grupo.miembros + contactoEditado)
-                                                !debeEstar && estaActualmente ->
-                                                    grupo.copy(miembros = grupo.miembros.filterNot { it.id == contacto.id })
-                                                debeEstar && estaActualmente ->
-                                                    grupo.copy(miembros = grupo.miembros.map { if (it.id == contacto.id) contactoEditado else it })
-                                                else -> grupo
+                                            if (debeEstar && !estaActualmente) {
+                                                grupoViewModel.agregarMiembro(grupo.id, contacto.id)
+                                            } else if (!debeEstar && estaActualmente) {
+                                                grupoViewModel.quitarMiembro(grupo.id, contacto.id)
                                             }
                                         }
 
@@ -549,10 +543,7 @@ class MainActivity : ComponentActivity() {
                                     // disponible por si luego quieres agregar analítica, sonido, etc.
                                 },
                                 onFavoritoClick = { contacto ->
-                                    val index = contactos.indexOfFirst { it.id == contacto.id }
-                                    if (index != -1) {
-                                        contactos[index] = contactos[index].copy(favorito = !contactos[index].favorito)
-                                    }
+                                    contactoViewModel.marcarFavorito(contacto, !contacto.favorito)
                                 },
                                 onEliminarContacto = { contacto ->
                                     soundPool.play(sonidoBorrar, 1f, 1f, 1, 0, 1f)
@@ -568,15 +559,13 @@ class MainActivity : ComponentActivity() {
                                     }
 
                                     // También lo quitamos de cualquier grupo al que pertenezca
-                                    for (i in grupos.indices) {
-                                        if (grupos[i].miembros.any { it.id == contacto.id }) {
-                                            grupos[i] = grupos[i].copy(
-                                                miembros = grupos[i].miembros.filterNot { it.id == contacto.id }
-                                            )
+                                    for (grupo in gruposConContactos) {
+                                        if (grupo.miembros.any { it.id == contacto.id }) {
+                                            grupoViewModel.quitarMiembro(grupo.id, contacto.id)
                                         }
                                     }
 
-                                    contactos.removeAll { it.id == contacto.id }
+                                    contactoViewModel.eliminarContacto(contacto)
 
                                     scope.launch {
                                         snackbarHostState.showSnackbar("Contacto eliminado")
@@ -591,14 +580,7 @@ class MainActivity : ComponentActivity() {
                                 navController = navController,
                                 contactos = contactos.filter { it.favorito },
                                 onFavoritoClick = { contacto ->
-                                    val index = contactos.indexOfFirst { it.id == contacto.id }
-
-                                    if (index != -1) {
-                                        contactos[index] =
-                                            contactos[index].copy(
-                                                favorito = !contactos[index].favorito
-                                            )
-                                    }
+                                    contactoViewModel.marcarFavorito(contacto, !contacto.favorito)
                                 },
                                 onEliminarContacto = { contacto ->
                                     soundPool.play(sonidoBorrar, 1f, 1f, 1, 0, 1f)
@@ -613,15 +595,13 @@ class MainActivity : ComponentActivity() {
                                         vibrator.vibrate(80)
                                     }
 
-                                    for (i in grupos.indices) {
-                                        if (grupos[i].miembros.any { it.id == contacto.id }) {
-                                            grupos[i] = grupos[i].copy(
-                                                miembros = grupos[i].miembros.filterNot { it.id == contacto.id }
-                                            )
+                                    for (grupo in gruposConContactos) {
+                                        if (grupo.miembros.any { it.id == contacto.id }) {
+                                            grupoViewModel.quitarMiembro(grupo.id, contacto.id)
                                         }
                                     }
 
-                                    contactos.removeAll { it.id == contacto.id }
+                                    contactoViewModel.eliminarContacto(contacto)
 
                                     scope.launch {
                                         snackbarHostState.showSnackbar("Contacto eliminado")
@@ -632,7 +612,7 @@ class MainActivity : ComponentActivity() {
                         composable(Pantalla.Grupos.ruta) {
                             PantallaGrupos(
                                 navController = navController,
-                                grupos = grupos,
+                                grupos = gruposConContactos,
                                 tabActual = Pantalla.Grupos
                             )
                         }
@@ -641,9 +621,8 @@ class MainActivity : ComponentActivity() {
                             PantallaCrearGrupo(
                                 contactosDisponibles = contactos,
                                 onCancelar = { navController.popBackStack() },
-                                onCrear = { nuevoGrupo ->
-                                    val idAsignado = (grupos.maxOfOrNull { it.id } ?: 0) + 1
-                                    grupos.add(nuevoGrupo.copy(id = idAsignado))
+                                onCrear = { nuevoGrupo, miembros ->
+                                    grupoViewModel.crearGrupo(nuevoGrupo, miembros)
 
                                     // Feedback de sonido y vibración, igual que al agregar un contacto
                                     soundPool.play(sonidoCrear, 1f, 1f, 1, 0, 1f)
@@ -672,7 +651,7 @@ class MainActivity : ComponentActivity() {
                             val grupoId =
                                 backStackEntry.arguments?.getString("grupoId")?.toIntOrNull()
 
-                            val grupo = grupos.firstOrNull { it.id == grupoId }
+                            val grupo = gruposConContactos.firstOrNull { it.id == grupoId }
 
                             if (grupo != null) {
                                 PantallaDetalleGrupo(
@@ -690,7 +669,7 @@ class MainActivity : ComponentActivity() {
                             val grupoId =
                                 backStackEntry.arguments?.getString("grupoId")?.toIntOrNull()
 
-                            val grupo = grupos.firstOrNull { it.id == grupoId }
+                            val grupo = gruposConContactos.firstOrNull { it.id == grupoId }
 
                             if (grupo != null) {
                                 PantallaLlamadaGrupal(

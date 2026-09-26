@@ -41,13 +41,17 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.contactup.data.ColoresGrupo
 import com.example.contactup.data.Contacto
-import com.example.contactup.data.Grupo
+import com.example.contactup.data.GrupoConContactos
 import com.example.contactup.ui.theme.ContactUpTheme
+import com.example.contactup.data.id
+import com.example.contactup.data.nombre
+import com.example.contactup.data.color
+import com.example.contactup.data.Grupo
 
 @Composable
 fun PantallaGrupos(
     navController: NavController,
-    grupos: List<Grupo> = emptyList(),
+    grupos: List<GrupoConContactos> = emptyList(),
     tabActual: Pantalla = Pantalla.Grupos
 ) {
     var busqueda by remember { mutableStateOf("") }
@@ -194,7 +198,7 @@ fun PantallaGrupos(
 
 @Composable
 fun FilaGrupo(
-    grupo: Grupo,
+    grupo: GrupoConContactos,
     onClick: () -> Unit
 ) {
     Row(
@@ -243,11 +247,26 @@ fun FilaGrupo(
 // ---- Previews ----
 
 private val gruposPreview = listOf(
-    Grupo(id = 1, nombre = "Trabajo", color = ColoresGrupo[1], miembros = List(12) { Contacto(nombre = "Miembro $it", telefono = "", correo = "") }),
-    Grupo(id = 2, nombre = "Familia", color = ColoresGrupo[0], miembros = List(8) { Contacto(nombre = "Miembro $it", telefono = "", correo = "") }),
-    Grupo(id = 3, nombre = "Amigos", color = ColoresGrupo[2], miembros = List(15) { Contacto(nombre = "Miembro $it", telefono = "", correo = "") }),
-    Grupo(id = 4, nombre = "Universidad", color = ColoresGrupo[3], miembros = List(6) { Contacto(nombre = "Miembro $it", telefono = "", correo = "") }),
-    Grupo(id = 5, nombre = "Gimnasio", color = ColoresGrupo[4], miembros = List(4) { Contacto(nombre = "Miembro $it", telefono = "", correo = "") })
+    GrupoConContactos(
+        grupo = Grupo(id = 1, nombre = "Trabajo", color = ColoresGrupo[1]),
+        miembros = List(12) { Contacto(nombre = "Miembro $it", telefono = "", correo = "") }
+    ),
+    GrupoConContactos(
+        grupo = Grupo(id = 2, nombre = "Familia", color = ColoresGrupo[0]),
+        miembros = List(8) { Contacto(nombre = "Miembro $it", telefono = "", correo = "") }
+    ),
+    GrupoConContactos(
+        grupo = Grupo(id = 3, nombre = "Amigos", color = ColoresGrupo[2]),
+        miembros = List(15) { Contacto(nombre = "Miembro $it", telefono = "", correo = "") }
+    ),
+    GrupoConContactos(
+        grupo = Grupo(id = 4, nombre = "Universidad", color = ColoresGrupo[3]),
+        miembros = List(6) { Contacto(nombre = "Miembro $it", telefono = "", correo = "") }
+    ),
+    GrupoConContactos(
+        grupo = Grupo(id = 5, nombre = "Gimnasio", color = ColoresGrupo[4]),
+        miembros = List(4) { Contacto(nombre = "Miembro $it", telefono = "", correo = "") }
+    )
 )
 
 @Preview(name = "Claro", showBackground = true)

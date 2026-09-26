@@ -45,12 +45,15 @@ import androidx.compose.ui.unit.dp
 import com.example.contactup.data.ColoresGrupo
 import com.example.contactup.data.Contacto
 import com.example.contactup.data.Grupo
+import com.example.contactup.data.GrupoConContactos
+import com.example.contactup.data.id
+import com.example.contactup.data.nombre
 import com.example.contactup.ui.theme.ContactUpTheme
 
 @Composable
 fun PantallaEditarContacto(
     contacto: Contacto,
-    todosLosGrupos: List<Grupo> = emptyList(),
+    todosLosGrupos: List<GrupoConContactos> = emptyList(),
     onClickCancelar: () -> Unit = {},
     onGuardar: (contactoEditado: Contacto, gruposSeleccionados: Set<Int>) -> Unit = { _, _ -> }
 ) {
@@ -317,9 +320,9 @@ private fun ChipGrupo(
 private val contactoPreview = Contacto(id = 1, nombre = "María García", telefono = "+34 677 555 444", correo = "maria.garcia@gmail.com")
 
 private val gruposPreviewEditar = listOf(
-    Grupo(id = 1, nombre = "Trabajo", color = ColoresGrupo[1], miembros = listOf(contactoPreview)),
-    Grupo(id = 2, nombre = "Familia", color = ColoresGrupo[0], miembros = listOf(contactoPreview)),
-    Grupo(id = 3, nombre = "Amigos", color = ColoresGrupo[2], miembros = emptyList())
+    GrupoConContactos(grupo = Grupo(id = 1, nombre = "Trabajo", color = ColoresGrupo[1]), miembros = listOf(contactoPreview)),
+    GrupoConContactos(grupo = Grupo(id = 2, nombre = "Familia", color = ColoresGrupo[0]), miembros = listOf(contactoPreview)),
+    GrupoConContactos(grupo = Grupo(id = 3, nombre = "Amigos", color = ColoresGrupo[2]), miembros = emptyList())
 )
 
 @Preview(name = "Claro", showBackground = true)
