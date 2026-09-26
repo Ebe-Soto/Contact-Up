@@ -18,6 +18,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.contactup.data.Contacto
+import com.example.contactup.data.Grupo
 import com.example.contactup.data.IniciarSesion
 import com.example.contactup.data.RegistrarUser
 import com.example.contactup.ui.theme.ContactUpTheme
@@ -83,6 +84,9 @@ class MainActivity : ComponentActivity() {
             ContactUpTheme(darkTheme = modoOscuro) {
 
                 val contactos = remember { mutableStateListOf<Contacto>() }
+
+                // Estado de grupos, compartido entre las pantallas de Grupos
+                val grupos = remember { mutableStateListOf<Grupo>() }
 
                 val navController = rememberNavController()
 
@@ -456,14 +460,81 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable(Pantalla.Grupos.ruta) {
-                            PantallaPrincipal(
+                            PantallaGrupos(
                                 navController = navController,
-                                contactos = emptyList(),
-                                tabActual = Pantalla.Grupos,
-                                modoOscuro = modoOscuro,
-                                onModoOscuroChange = { modoOscuro = it },
-                                mostrarBotonAgregar = false
+                                grupos = grupos,
+                                tabActual = Pantalla.Grupos
                             )
+                        }
+
+                        composable(Pantalla.CrearGrupo.ruta) {
+                            PantallaCrearGrupo(
+                                contactosDisponibles = contactos,
+                                onCancelar = { navController.popBackStack() },
+                                onCrear = { nuevoGrupo ->
+                                    val idAsignado = (grupos.maxOfOrNull { it.id } ?: 0) + 1
+                                    grupos.add(nuevoGrupo.copy(id = idAsignado))
+
+                                    // Feedback de sonido y vibración, igual que al agregar un contacto
+                                    soundPool.play(sonidoCrear, 1f, 1f, 1, 0, 1f)
+
+                                    val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                        vibrator.vibrate(
+                                            VibrationEffect.createOneShot(80, VibrationEffect.DEFAULT_AMPLITUDE)
+                                        )
+                                    } else {
+                                        @Suppress("DEPRECATION")
+                                        vibrator.vibrate(80)
+                                    }
+
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar("¡Grupo creado con éxito!")
+                                    }
+
+                                    navController.popBackStack()
+                                }
+                            )
+                        }
+
+                        composable(Pantalla.DetalleGrupo.ruta) { backStackEntry ->
+
+                            val grupoId =
+                                backStackEntry.arguments?.getString("grupoId")?.toIntOrNull()
+
+                            val grupo = grupos.firstOrNull { it.id == grupoId }
+
+                            if (grupo != null) {
+                                PantallaDetalleGrupo(
+                                    grupo = grupo,
+                                    onBack = { navController.popBackStack() },
+                                    onLlamadaGrupalClick = {
+                                        navController.navigate("llamada_grupal/${grupo.id}")
+                                    }
+                                )
+                            }
+                        }
+
+                        composable(Pantalla.LlamadaGrupal.ruta) { backStackEntry ->
+
+                            val grupoId =
+                                backStackEntry.arguments?.getString("grupoId")?.toIntOrNull()
+
+                            val grupo = grupos.firstOrNull { it.id == grupoId }
+
+                            if (grupo != null) {
+                                PantallaLlamadaGrupal(
+                                    grupo = grupo,
+                                    onCerrar = { navController.popBackStack() },
+                                    onIniciarLlamada = { _ ->
+                                        // TODO: conectar con la lógica real de llamada grupal (WebRTC, etc.)
+                                        scope.launch {
+                                            snackbarHostState.showSnackbar("Función de llamada grupal en desarrollo")
+                                        }
+                                        navController.popBackStack()
+                                    }
+                                )
+                            }
                         }
                     }
                 }
